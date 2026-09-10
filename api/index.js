@@ -13,19 +13,18 @@ export default {
 
       const raw = await res.text();
 
-      // Только чистые ключи, без названий
+      // Ключи + названия серверов
       const keys = raw
         .split(/\r?\n/)
         .map(l => l.trim())
         .filter(l => l.startsWith("vless://") || l.startsWith("trojan://"))
-        .map(l => l.split("#")[0])
         .join("\n");
 
       if (!keys) {
         return new Response("empty", { status: 500 });
       }
 
-      // Главный трюк — говорим, что это JSON, а отдаём обычный текст
+      // Трюк с application/json — переводчик не трогает
       return new Response(keys + "\n", {
         status: 200,
         headers: {
