@@ -10,25 +10,27 @@ export default async function handler(req, res) {
     );
 
     if (!response.ok) {
-      return res.status(502).send("Error fetching source");
+      return res.status(502).send("Error");
     }
 
     let text = await response.text();
 
-    // Убираем все строки, которые начинаются с #
+    // Убираем все заголовки (строки с #)
     text = text
       .split("\n")
-      .filter(line => !line.trim().startsWith("#"))
-      .join("\n")
-      .trim();
+      .filter(line => line.trim() && !line.trim().startsWith("#"))
+      .join("\n");
 
+    // Максимально "сухие" заголовки, чтобы переводчик меньше лез
     res.setHeader("Content-Type", "text/plain; charset=utf-8");
-    res.setHeader("Access-Control-Allow-Origin", "*");
-    res.setHeader("Cache-Control", "public, max-age=300");
+    res.setHeader("Content-Disposition", "inline; filename=\"sub.txt\"");
     res.setHeader("X-Content-Type-Options", "nosniff");
+    res.setHeader("Cache-Control", "public, max-age=300");
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("X-Robots-Tag", "noindex, nofollow");
 
     return res.status(200).send(text);
   } catch (err) {
-    return res.status(500).send("Server Error");
+    return res.status(500).send("Error");
   }
 }
