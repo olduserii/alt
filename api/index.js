@@ -13,14 +13,19 @@ export default async function handler(req, res) {
       return res.status(502).send("Error fetching source");
     }
 
-    const text = await response.text();
+    let text = await response.text();
 
-    // Самые важные заголовки
+    // Убираем все строки, которые начинаются с #
+    text = text
+      .split("\n")
+      .filter(line => !line.trim().startsWith("#"))
+      .join("\n")
+      .trim();
+
     res.setHeader("Content-Type", "text/plain; charset=utf-8");
     res.setHeader("Access-Control-Allow-Origin", "*");
     res.setHeader("Cache-Control", "public, max-age=300");
     res.setHeader("X-Content-Type-Options", "nosniff");
-    res.setHeader("Content-Disposition", "inline");
 
     return res.status(200).send(text);
   } catch (err) {
