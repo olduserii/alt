@@ -1,0 +1,5 @@
+{
+  "rewrites": [
+    { "source": "/alt", "destination": "/api" }
+  ]
+}
