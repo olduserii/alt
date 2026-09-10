@@ -13,27 +13,26 @@ export default {
 
       const raw = await res.text();
 
-      // Берём только ключи и полностью отрезаем всё после #
+      // Только чистые ключи, без названий
       const keys = raw
         .split(/\r?\n/)
-        .map(line => line.trim())
-        .filter(line => line.startsWith("vless://") || line.startsWith("trojan://"))
-        .map(line => line.split("#")[0])   // убираем название сервера
-        .filter(Boolean)
+        .map(l => l.trim())
+        .filter(l => l.startsWith("vless://") || l.startsWith("trojan://"))
+        .map(l => l.split("#")[0])
         .join("\n");
 
       if (!keys) {
         return new Response("empty", { status: 500 });
       }
 
+      // Главный трюк — говорим, что это JSON, а отдаём обычный текст
       return new Response(keys + "\n", {
         status: 200,
         headers: {
-          "Content-Type": "text/plain; charset=utf-8",
-          "Content-Disposition": "attachment; filename=\"sub.txt\"",
-          "X-Content-Type-Options": "nosniff",
-          "Cache-Control": "no-store",
+          "Content-Type": "application/json; charset=utf-8",
+          "Cache-Control": "public, max-age=120",
           "Access-Control-Allow-Origin": "*",
+          "X-Content-Type-Options": "nosniff",
         },
       });
     } catch (e) {
