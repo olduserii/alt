@@ -1,42 +1,47 @@
 const SUKI_URL = "https://raw.githubusercontent.com/gh8y4gwmsq-web/sUukaaa/refs/heads/main/suki.txt";
 
 export default {
-  async fetch(request) {
+  async fetch() {
     try {
       const res = await fetch(SUKI_URL, {
-        headers: { "User-Agent": "Vercel-Sueta/1.0" },
+        headers: {
+          "User-Agent": "Mozilla/5.0 (compatible; Vercel)",
+        },
       });
 
       if (!res.ok) {
-        return new Response(JSON.stringify({ error: "GitHub error" }), {
-          status: 502,
-          headers: { "Content-Type": "application/json" },
-        });
+        return new Response("Source error", { status: 502 });
       }
 
-      const text = await res.text();
+      const raw = await res.text();
 
-      // Берём только ключи
-      const keys = text
-        .split("\n")
+      // Только ключи, ничего лишнего
+      const keys = raw
+        .split(/\r?\n/)
         .map(l => l.trim())
-        .filter(l => l && !l.startsWith("#"));
+        .filter(l => l.length > 10 && !l.startsWith("#"))
+        .join("\n");
 
-      // Отдаём чистый JSON с ключами
-      return new Response(JSON.stringify(keys, null, 2), {
+      if (!keys) {
+        return new Response("No keys", { status: 500 });
+      }
+
+      // Самые жёсткие заголовки против переводчика
+      return new Response(keys, {
         status: 200,
         headers: {
-          "Content-Type": "application/json; charset=utf-8",
-          "Cache-Control": "public, max-age=300",
-          "Access-Control-Allow-Origin": "*",
+          "Content-Type": "text/plain; charset=utf-8",
+          "Content-Disposition": "attachment; filename=\"keys.txt\"",
           "X-Content-Type-Options": "nosniff",
+          "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+          "Pragma": "no-cache",
+          "Expires": "0",
+          "Access-Control-Allow-Origin": "*",
+          "X-Robots-Tag": "noindex, nofollow, noarchive",
         },
       });
-    } catch (err) {
-      return new Response(JSON.stringify({ error: err.message }), {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
-      });
+    } catch (e) {
+      return new Response("Error", { status: 500 });
     }
   },
 };
