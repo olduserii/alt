@@ -13,28 +13,31 @@ export default {
 
       let text = await res.text();
 
-      // Оставляем только ключи (убираем все строки с #)
-      text = text
+      // Оставляем только ключи
+      const lines = text
         .split("\n")
         .map(l => l.trim())
-        .filter(l => l && !l.startsWith("#"))
-        .join("\n");
+        .filter(l => l && !l.startsWith("#"));
 
-      // Кодируем в base64 — переводчик это почти никогда не трогает
+      text = lines.join("\n");
+
+      if (!text) {
+        return new Response("No servers found", { status: 500 });
+      }
+
+      // Надёжное кодирование в base64
       const base64 = btoa(unescape(encodeURIComponent(text)));
 
       return new Response(base64, {
         status: 200,
         headers: {
           "Content-Type": "text/plain; charset=utf-8",
-          "Content-Disposition": "inline; filename=\"sub.txt\"",
           "Cache-Control": "public, max-age=300",
           "Access-Control-Allow-Origin": "*",
-          "X-Content-Type-Options": "nosniff",
         },
       });
     } catch (err) {
-      return new Response("Error: " + err.message, { status: 502 });
+      return new Response("Error: " + err.message, { status: 500 });
     }
   },
 };
