@@ -4,44 +4,40 @@ export default {
   async fetch() {
     try {
       const res = await fetch(SUKI_URL, {
-        headers: {
-          "User-Agent": "Mozilla/5.0 (compatible; Vercel)",
-        },
+        headers: { "User-Agent": "Mozilla/5.0" },
       });
 
       if (!res.ok) {
-        return new Response("Source error", { status: 502 });
+        return new Response("error", { status: 502 });
       }
 
       const raw = await res.text();
 
-      // Только ключи, ничего лишнего
+      // Берём только ключи и полностью отрезаем всё после #
       const keys = raw
         .split(/\r?\n/)
-        .map(l => l.trim())
-        .filter(l => l.length > 10 && !l.startsWith("#"))
+        .map(line => line.trim())
+        .filter(line => line.startsWith("vless://") || line.startsWith("trojan://"))
+        .map(line => line.split("#")[0])   // убираем название сервера
+        .filter(Boolean)
         .join("\n");
 
       if (!keys) {
-        return new Response("No keys", { status: 500 });
+        return new Response("empty", { status: 500 });
       }
 
-      // Самые жёсткие заголовки против переводчика
-      return new Response(keys, {
+      return new Response(keys + "\n", {
         status: 200,
         headers: {
           "Content-Type": "text/plain; charset=utf-8",
-          "Content-Disposition": "attachment; filename=\"keys.txt\"",
+          "Content-Disposition": "attachment; filename=\"sub.txt\"",
           "X-Content-Type-Options": "nosniff",
-          "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
-          "Pragma": "no-cache",
-          "Expires": "0",
+          "Cache-Control": "no-store",
           "Access-Control-Allow-Origin": "*",
-          "X-Robots-Tag": "noindex, nofollow, noarchive",
         },
       });
     } catch (e) {
-      return new Response("Error", { status: 500 });
+      return new Response("fail", { status: 500 });
     }
   },
 };
