@@ -8,36 +8,35 @@ export default {
       });
 
       if (!res.ok) {
-        return new Response("GitHub error: " + res.status, { status: 502 });
+        return new Response(JSON.stringify({ error: "GitHub error" }), {
+          status: 502,
+          headers: { "Content-Type": "application/json" },
+        });
       }
 
-      let text = await res.text();
+      const text = await res.text();
 
-      // Оставляем только ключи
-      const lines = text
+      // Берём только ключи
+      const keys = text
         .split("\n")
         .map(l => l.trim())
         .filter(l => l && !l.startsWith("#"));
 
-      text = lines.join("\n");
-
-      if (!text) {
-        return new Response("No servers found", { status: 500 });
-      }
-
-      // Надёжное кодирование в base64
-      const base64 = btoa(unescape(encodeURIComponent(text)));
-
-      return new Response(base64, {
+      // Отдаём чистый JSON с ключами
+      return new Response(JSON.stringify(keys, null, 2), {
         status: 200,
         headers: {
-          "Content-Type": "text/plain; charset=utf-8",
+          "Content-Type": "application/json; charset=utf-8",
           "Cache-Control": "public, max-age=300",
           "Access-Control-Allow-Origin": "*",
+          "X-Content-Type-Options": "nosniff",
         },
       });
     } catch (err) {
-      return new Response("Error: " + err.message, { status: 500 });
+      return new Response(JSON.stringify({ error: err.message }), {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      });
     }
   },
 };
